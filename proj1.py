@@ -1,24 +1,82 @@
 print("Python Parser Project")
+global Next, lex, token, char, Lexeme, NextToken
+# file open
+# out = open('parser_output.txt', 'w')
 
-#file open
-out = open('parser_output.txt', 'w')
+# for i in range(1, 25):
+#                 str(i)+ '.txt'
+file = open('1.txt', 'r')
+text = file.read()
 
-for i in range(1, 25):
-   file = open(str(i) + '.txt', 'r')
-   text = file.read()
-   #parse
 
-   out.write('string')
 
-out.close()
 
-#main code
 
-#Lex()
-#nextChar()
-#Lookup()
+lex = ''
+token = ''
+NextToken = (lex, token)
+
+Lexeme = []
+for i in text:
+   Lexeme+=i
+
+#not sure took from yusuf
+def nextChar():
+   for i in Lexeme:
+      yield i
+
+Next = nextChar()
+char = next(Next)
+
+
+
+# Lex() - lexical analyzer
+def Lex():
+   lex = ''
+   token = ''
+   NextToken = (lex, token)
+   while char.isdigit()
+
+
+# getChar()
+def getChar():
+
+# Lookup() - function to lookup operators and return the token
+def lookpu(char):
+    if char == "(":
+        return ('(', 'Left_Paren')
+    elif char == ")":
+        return (')', 'Right_Paren')
+    elif char == "+":
+        return ('+', 'special')
+    elif char == "-":
+        return ('-', 'special')
+    elif char == "*":
+        return ('*', 'special')
+    elif char == "/":
+        return ('/', 'special')
+    elif char == "\\":
+        return ('\\', 'special')
+    elif char == "^":
+        return ('^', 'special')
+    elif char == "~":
+        return ('~', 'special')
+    elif char == ":":
+        return (':', 'special')
+    elif char == ".":
+        return ('.', 'special')
+    elif char == "?":
+        return ('?', 'special')
+    elif char == " ":
+        return (' ', 'special')
+    elif char == "#":
+        return ('#', 'special')
+    elif char == "$":
+        return ('$', 'special')
+    elif char == "&":
+        return ('&', 'special')
 # error()
-#statement()
+# statement()
 
 # <program> -> <clause-list> <query> | <query>
 
@@ -61,6 +119,3 @@ out.close()
 # <character> -> <alphanumeric> | <special>
 
 # <special> -> + | - | * | / | \ | ^ | ~ | : | . | ? | | # | $ | &
-
-
-
