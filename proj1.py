@@ -31,11 +31,19 @@ char = next(Next)
 
 
 # Lex() - lexical analyzer
+#numeral, atom, variable
 def Lex():
-   lex = ''
-   token = ''
-   NextToken = (lex, token)
-   while char.isdigit()
+    NextToken = (lex, token)
+   while char.isdigit():
+       lex+=char
+       token = 'numeral'
+       NextToken = (lex, token)
+       char = next(Next)
+       break
+
+    if char.islower():
+        lex+=char
+        token = ''
 
 
 # getChar()
@@ -93,6 +101,12 @@ def lookpu(char):
 # <term-list> -> <term> | <term> , <term-list>
 
 # <term> -> <atom> | <variable> | <structure> | <numeral>
+def term():
+    if NextToken[1] == 'atom' or NextToken[1] == 'variable' or NextToken[1] == 'structure' or NextToken[1] == 'Numerical':
+        return True
+    else:
+        #error handling
+        return False
 
 # <structure> -> <atom> ( <term-list> )
 
