@@ -245,6 +245,17 @@ def variable():
         Lex()
 
 # <small-atom> -> <lowercase-char> | <lowercase-char> <character-list>
+def small_atom():
+    global error
+    if NextToken == LOWER_CHAR:
+        Lex()
+        if NextToken == LOWER_CHAR:
+            character_list()
+    else:
+        OFile.write("Syntax Error on Line " + str(number_of_lines) + ". Expected lowercase, got " + thisChar)
+        error += 1
+        get_char()
+        Lex()
 
 # <atom> -> <small-atom> | ' <string> '
 def atom():
