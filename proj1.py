@@ -125,7 +125,7 @@ def get_char():
         nextChar = File.read(1)
         
     if nextChar != EOF:
-        if char.isupper():
+        if nextChar.isupper():
             charClass = UPPER_CHAR
         elif nextChar.islower():
             charClass = LOWER_CHAR
