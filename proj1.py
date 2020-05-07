@@ -4,13 +4,14 @@ import re
 global lex_index, token, nextChar, Lexeme, NextToken, File, error, charClass
 File = None
 OFile = None
-number_of_lines = 0
+number_of_lines = 1
 token = -1
 Lexeme = []
 error = 0
 nextChar = ''
 thisChar = ''
 NextToken = -1
+count = 0
 
 # Tokens
 UPPER_CHAR, LOWER_CHAR, DIGIT, UNKNOWN= 0,1,2,99
@@ -51,7 +52,7 @@ def main():
 
 # Lookup() - function to lookup operators and return the token
 def lookup(char):
-    global NextToken
+    global NextToken,count
     if char == "\n":
         number_of_lines+=1
     elif char == ",":
@@ -118,15 +119,17 @@ def add_char():
 
 #to get the next character of input and determine its character and class
 def get_char():
-    global nextChar, charClass, number_of_lines
+    global nextChar, charClass, number_of_lines,count
+    count += 1
     nextChar = File.read(1)
     
-    while re.match('\s',nextChar) and nextChar != ' ':
+    while re.match('\s',nextChar):
         if nextChar == '\n':
             number_of_lines+=1
+            count=0
         nextChar = File.read(1)
         
-    if nextChar != EOF:
+    if nextChar != EOF and nextChar != '\n':
         if nextChar.isupper():
             charClass = UPPER_CHAR
         elif nextChar.islower():
@@ -135,22 +138,31 @@ def get_char():
             charClass = DIGIT
         else:
             charClass = UNKNOWN
+    elif nextChar == '\n':
+        charClass = UNKNOWN
     else:
         charClass = EOF
-
+        
 # Lex() - lexical analyzer
 #numeral, atom, variable
 def Lex():
     global NextToken, Lexeme
-    if charClass in [UPPER_CHAR,LOWER_CHAR]:
+    if charClass == LOWER_CHAR:
         thisChar = nextChar
-        chclass = charClass
         add_char()
         get_char()
         while charClass in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
             add_char()
             get_char()
-        NextToken = chclass
+        NextToken = LOWER_CHAR
+    elif charClass == UPPER_CHAR:
+        thisChar = nextChar
+        add_char()
+        get_char()
+        while charClass in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
+            add_char()
+            get_char()
+        NextToken = UPPER_CHAR
     elif charClass == DIGIT:
         thisChar = nextChar
         add_char()
@@ -167,8 +179,6 @@ def Lex():
         NextToken = EOF
         Lexeme.append('EOF')
     
-    OFile.write("Next token is "+str(NextToken)+", Next lexeme is "+str(Lexeme))
-
 #---------Syntax analysis-----------
 # <special> ->+|-|*|/|\|^|~|:|.|?| |#|$|&
 def special():
@@ -176,7 +186,7 @@ def special():
     if NextToken in [ADD_OP,SUB_OP,MULT_OP,DIV_OP,BACK_SLASH,CIRCUMFLEX,TILDE,COLON,PERIOD,QUESTION,SPACE,HASHTAG,DOLLAR,AMPERSAND]:
         Lex()
     else:
-        OFile.write("Syntax Error on Line "+str(number_of_lines)+". "+thisChar+" is not a special character")
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". "+thisChar+" is not a special character\n")
         error+=1
         get_char()
         Lex()
@@ -187,7 +197,7 @@ def alphanumeric():
     if NextToken in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
         Lex()
     else:
-        OFile.write("Syntax Error on Line "+str(number_of_lines)+". "+thisChar+" is not alphanumeric")
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". "+thisChar+" is not alphanumeric\n")
         error+=1
         get_char()
         Lex()
@@ -200,7 +210,7 @@ def character():
     elif NextToken in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
         alphanumeric()
     else:
-        OFile.write("Syntax Error on Line "+str(number_of_lines)+"."+thisChar+" is not a character")
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+"."+thisChar+" is not a character\n")
         error+=1
         get_char()
         Lex()
@@ -220,7 +230,7 @@ def numeral():
         if NextToken == DIGIT:
             numeral()
     else:
-        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Expected digit, got "+thisChar)
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Expected digit, got "+thisChar+"\n")
         error+=1
         get_char()
         Lex()
@@ -229,7 +239,7 @@ def numeral():
 def character_list():
     alphanumeric()
     if NextToken in [UPPER_CHAR, LOWER_CHAR, DIGIT]:
-        lex()
+        Lex()
         character_list()
 
 # <variable> -> <uppercase-char> | <uppercase-char> <character-list>
@@ -240,7 +250,7 @@ def variable():
         if NextToken in [UPPER_CHAR, LOWER_CHAR, DIGIT]:
             character_list()
     else:
-        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Expected variable, got "+thisChar)
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Expected variable, got "+thisChar+"\n")
         error+=1
         get_char()
         Lex()
@@ -253,7 +263,7 @@ def smallatom():
         if NextToken == LOWER_CHAR:
             character_list()
     else:
-        OFile.write("Syntax Error on Line " + str(number_of_lines) + ". Expected lowercase, got " + thisChar)
+        OFile.write("Syntax Error on Line " + str(number_of_lines) + ". Expected lowercase, got " + thisChar+"\n")
         error += 1
         get_char()
         Lex()
@@ -262,22 +272,20 @@ def smallatom():
 def atom():
     global error
     if NextToken == LOWER_CHAR:
-        return smallatom()
+        smallatom()
     elif NextToken == INVCOMMA:
         Lex()
         string()
         if NextToken != INVCOMMA:
-            OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing '")
+            OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing '\n")
             error+=1
             get_char()
             Lex()
-            return False
     else:
-        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Expected Small Atom or String, got "+thisChar)
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Expected Small Atom or String, got "+thisChar+"\n")
         error+=1
         get_char()
         Lex()
-        return False
 
 # <term> -> <atom> | <variable> | <structure> | <numeral>
 def Term():
@@ -287,13 +295,12 @@ def Term():
     elif NextToken == UPPER_CHAR:
         variable()
     elif NextToken in [LOWER_CHAR, INVCOMMA]:
-        structure()
+        Predicate()
     else:
-        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Illegal Term")
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Illegal Term\n")
         error+=1
         get_char()
         Lex()
-        return False
 
 # <term-list> -> <term> | <term> , <term-list>
 def TermList():
@@ -312,12 +319,12 @@ def structure():
         if NextToken == RIGHT_PAREN:
             Lex()
         else:
-            OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing )")
+            OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing )\n")
             error+=1
             get_char()
             Lex()
     else:
-        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing (")
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing (\n")
         error+=1
         get_char()
         Lex()
@@ -332,7 +339,7 @@ def Predicate():
         if NextToken == RIGHT_PAREN:
             Lex()
         else:
-            OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing )")
+            OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing )\n")
             error+=1
             get_char()
             Lex()
@@ -355,17 +362,17 @@ def Query():
             if NextToken == PERIOD:
                 Lex()
             else:
-                OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing .")
+                OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing .\n")
                 error+=1
                 get_char()
                 Lex()
         else:
-            OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing -")
+            OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing -\n")
             error+=1
             get_char()
             Lex()
     else:
-        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing ?")
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing ?\n")
         error+=1
         get_char()
         Lex()
@@ -381,21 +388,21 @@ def Clause():
         Lex()
         if NextToken == SUB_OP:
             Lex()
-            Predicate_List()
+            PredicateList()
             if NextToken == PERIOD:
                 Lex()
             else:
-                OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing .")
+                OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing .\n")
                 error+=1
                 get_char()
                 Lex()
         else:
-            OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing -")
+            OFile.write("Syntax Error on Line "+str(number_of_lines)+". Missing -\n")
             error+=1
             get_char()
             Lex()
     else:
-        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Expected . or :, got "+thisChar)
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Expected . or :, got "+thisChar+"\n")
         error+=1
         get_char()
         Lex()
@@ -416,10 +423,10 @@ def Program():
         Clause_List()
         if NextToken == QUESTION:
             Query()
-        else:
-            OFile.write("Syntax Error on Line "+str(number_of_lines)+". Clause_List must come before Query")
-            error+=1
-            get_char()
-            Lex()
+    else:
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Clause_List must come before Query\n")
+        error+=1
+        get_char()
+        Lex()
 
 main()
