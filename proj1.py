@@ -32,7 +32,7 @@ def main():
         except IOError:
             return 0
             
-        OFile.write('Parsing: '+str(i)'.txt')
+        OFile.write('Parsing: '+str(i)+'.txt')
             
         get_char()
 
@@ -50,62 +50,62 @@ def main():
 # Lookup() - function to lookup operators and return the token
 def lookup(char):
 
-    global next_token
+    global NextToken
     if char == "\n":
         number_of_lines+=1
     elif char == "(":
         add_char()
-        next_token = LEFT_PAREN
+        NextToken = LEFT_PAREN
     elif char == ")":
         add_char()
-        next_token = RIGHT_PAREN
+        NextToken = RIGHT_PAREN
     elif char == "+":
         add_char()
-        next_token = ADD_OP
+        NextToken = ADD_OP
     elif char == "-":
         add_char()
-        next_token = SUB_OP
+        NextToken = SUB_OP
     elif char == "*":
         add_char()
-        next_token = MULT_OP
+        NextToken = MULT_OP
     elif char == "/":
         add_char()
-        next_token = DIV_OP
+        NextToken = DIV_OP
     elif char == "\\":
         add_char()
-        next_token = BACK_SLASH
+        NextToken = BACK_SLASH
     elif char == "^":
         add_char()
-        next_token = CIRCUMFLEX
+        NextToken = CIRCUMFLEX
     elif char == "~":
         add_char()
-        next_token = TILDE
+        NextToken = TILDE
     elif char == ":":
         add_char()
-        next_token = COLON
+        NextToken = COLON
     elif char == ".":
         add_char()
-        next_token = PERIOD
+        NextToken = PERIOD
     elif char == "?":
         add_char()
-        next_token = QUESTION
+        NextToken = QUESTION
     elif char == " ":
         add_char()
-        next_token = SPACE
+        NextToken = SPACE
     elif char == "#":
         add_char()
-        next_token = HASHTAG
+        NextToken = HASHTAG
     elif char == "$":
         add_char()
-        next_token = DOLLAR
+        NextToken = DOLLAR
     elif char == "&":
         add_char()
-        next_token = AMPERSAND
+        NextToken = AMPERSAND
     else:
         add_char()
-        next_token = EOF
+        NextToken = EOF
 
-    return next_token
+    return NextToken
 
 #add next char to lexeme
 def add_char():
@@ -160,6 +160,9 @@ def Lex():
         Lexeme.append('EOF')
     
     OFile.write("Next token is "+str(NextToken)+", Next lexeme is "+str(Lexeme))
+
+
+#---------Syntax analysis-----------
 
 # <special> ->+|-|*|/|\|^|~|:|.|?| |#|$|&
 def special():
@@ -222,24 +225,20 @@ def numeral():
         get_char()
         Lex()
         return False
-    
 
-#---------Syntax analysis-----------
+# <character-list> -> <alphanumeric> | <alphanumeric> <character-list>
 
-# <program> -> <clause-list> <query> | <query>
+# <variable> -> <uppercase-char> | <uppercase-char> <character-list>
 
-# <clause-list> -> <clause> | <clause> <clause-list>
+# <small-atom> -> <lowercase-char> | <lowercase-char> <character-list>
 
-# <clause> -> <predicate> . | <predicate> :- <predicate-list> .
+# <atom> -> <small-atom> | ' <string> '
 
-# <query> -> ?- <predicate-list> .
+# <term> -> <atom> | <variable> | <structure> | <numeral>
 
-# <predicate-list> -> <predicate> | <predicate> , <predicate-list>
-def PredicateList():
-    Predicate()
-    if NextToken == COMMA:
-        Lex()
-        PredicateList()
+# <term-list> -> <term> | <term> , <term-list>
+
+# <structure> -> <atom> ( <term-list> )
         
 # <predicate> -> <atom> | <atom> ( <term-list> )
 
@@ -254,27 +253,85 @@ def Predicate():
             print("Missing RIGHT Parenthesis")
             get_char()
             Lex()
+# <predicate-list> -> <predicate> | <predicate> , <predicate-list>
+def PredicateList():
+    Predicate()
+    if NextToken == COMMA:
+        Lex()
+        PredicateList()
 
-# <term-list> -> <term> | <term> , <term-list>
+# <query> -> ?- <predicate-list> .
+def Query():
+    global error
+    if NextToken == QUESTION:
+        Lex()
+        if NextToken == DASH:
+            Lex()
+            Predicate_List()
+            if NextToken == PERIOD:
+                Lex()
+            else:
+                print("Missing PERIOD",number_of_lines,token)
+                get_char()
+                Lex()
+        else:
+            print("Missing DASH", number_of_lines,token)
+            get_char()
+            Lex()
+    else:
+        print("Missing QUESTION MARK", number_of_lines,token)
+        get_char()
+        Lex()
 
-# <term> -> <atom> | <variable> | <structure> | <numeral>
+# <clause> -> <predicate> . | <predicate> :- <predicate-list> .
+def Clause():
+    global error
+    Predicate()
 
-# <structure> -> <atom> ( <term-list> )
+    if NextToken == PERIOD:
+        Lex()
+    elif NextToken == COLON:
+        Lex()
+        if NextToken == DASH:
+            Lex()
+            Predicate_List()
+            if NextToken == PERIOD:
+                Lex()
+            else:
+                print("Missing PERIOD", number_of_lines,token)
+                get_char()
+                Lex()
+        else:
+            print("Missing COLON", number_of_lines,token)
+            get_char()
+            Lex()
+    else:
+        print("Invalid Clause", number_of_lines,token)
+        get_char()
+        Lex()
 
-# <atom> -> <small-atom> | ' <string> '
+# <clause-list> -> <clause> | <clause> <clause-list>
+def Clause_List():
+    global error
+    Clause()
+    if NextToken == QUOTATION:
+        Clause_List()
 
-# <small-atom> -> <lowercase-char> | <lowercase-char> <character-list>
+# <program> -> <clause-list> <query> | <query>
+def Program():
+    global error
+    if NextToken == QUESTION:
+        Query()
+    elif NextToken == LOWER_CHAR:
+        ClauseList()
+        if NextToken == QUESTION:
+            Query()
+        else:
+            print("Clause_List must come before Query", number_of_lines,token))
+            get_char()
+            Lex()
 
-# <variable> -> <uppercase-char> | <uppercase-char> <character-list>
-
-# <character-list> -> <alphanumeric> | <alphanumeric> <character-list>
-
-# <alphanumeric> -> <lowercase-char> | <uppercase-char> | <digit>
-
-# <numeral> -> <digit> | <digit> <numeral>
 
 
-# <string> -> <character> | <character> <string>
 
-# <character> -> <alphanumeric> | <special>
 
