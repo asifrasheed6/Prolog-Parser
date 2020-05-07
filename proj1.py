@@ -12,6 +12,7 @@ nextChar = ''
 
 
 UPPER_CHAR, LOWER_CHAR, DIGIT, UNKNOWN= 0,1,2,99
+COMMA = 20
 ADD_OP, SUB_OP, MULT_OP, DIV_OP = 21,22,23,24
 BACK_SLASH, CIRCUMFLEX, TILDE, COLON, PERIOD =25,26,27,28,29
 QUESTION, SPACE, HASHTAG, DOLLAR, AMPERSAND = 30,31,32,33,34,35
@@ -121,7 +122,7 @@ def get_char():
         nextChar = File.read(1)
         
     if nextChar != EOF:
-        if char.isupper():
+        if nextChar.isupper():
             charClass = UPPER_CHAR
         elif nextChar.islower():
             charClass = LOWER_CHAR
@@ -167,7 +168,7 @@ def special():
         Lex()
         return True
     else:
-        OFile.write("Syntax Error on Line "+str(number)+". "+str(nextChar)+" is not a special character")
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". "+str(nextChar)+" is not a special character")
         error+=1
         get_char()
         Lex()
@@ -180,7 +181,7 @@ def alphanumeric():
         Lex()
         return True
     else:
-        OFile.write("Syntax Error on Line "+str(number)+". "+str(nextChar)+" is not alphanumeric")
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+". "+str(nextChar)+" is not alphanumeric")
         error+=1
         get_char()
         Lex()
@@ -194,13 +195,13 @@ def character():
     elif NextToken in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
         return alphanumeric()
     else
-        OFile.write("Syntax Error on Line "+str(number)+"."+str(nextChar)+" is not a character")
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+"."+str(nextChar)+" is not a character")
         error+=1
         get_char()
         Lex()
         return False
 
-# <strring> -> <character> | <character> <string>
+# <string> -> <character> | <character> <string>
 def string():
     global error
     if character():
@@ -216,7 +217,7 @@ def numeral():
             numeral()
         return True
     else:
-        OFile.write("Syntax Error on Line "+str(number)+"."+str(nextChar)+" is not a numeral")
+        OFile.write("Syntax Error on Line "+str(number_of_lines)+"."+str(nextChar)+" is not a numeral")
         error+=1
         get_char()
         Lex()
