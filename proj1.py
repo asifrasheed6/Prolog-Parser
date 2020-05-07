@@ -33,7 +33,7 @@ def main():
         except IOError:
             return 0
             
-        OFile.write('Parsing: '+str(i)'.txt')
+        OFile.write('Parsing: '+str(i)+'.txt')
             
         get_char()
 
@@ -297,7 +297,7 @@ def Query():
     global error
     if NextToken == QUESTION:
         Lex()
-        if NextToken == DASH:
+        if NextToken == SUB_OP:
             Lex()
             Predicate_List()
             if NextToken == PERIOD:
