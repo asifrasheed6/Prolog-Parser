@@ -1,57 +1,41 @@
-print("Python Parser Project")
-global Next, lex, token, char, Lexeme, NextToken
-# file open
-# out = open('parser_output.txt', 'w')
-
-# for i in range(1, 25):
-#                 str(i)+ '.txt'
-file = open('1.txt', 'r')
-text = file.read()
+import re
 
 
-
-
-
-lex = ''
-token = ''
-NextToken = (lex, token)
-
+global lex_index, token, nextChar, Lexeme, NextToken, File, error, charClass
+File = None
+lex_index = -1
+token = -1
 Lexeme = []
-for i in text:
-   Lexeme+=i
-
-#not sure took from yusuf
-def nextChar():
-   for i in Lexeme:
-      yield i
-
-Next = nextChar()
-char = next(Next)
+error = []
+nextChar = ''
 
 
+#character classes
+LETTER, DIGIT, UNKNOWN = 0,1,99
 
-# Lex() - lexical analyzer
-#numeral, atom, variable
-def Lex():
-    NextToken = (lex, token)
-   while char.isdigit():
-       lex+=char
-       token = 'numeral'
-       NextToken = (lex, token)
-       char = next(Next)
-       break
-
-    if char.islower():
-        lex+=char
-        token = ''
+#token codes
+NUMERAL
 
 
-# getChar()
-def getChar():
+
+
+#main driver
+def main():
+    global File
+    for i in range(1, 25):
+        File = open(str(i)+'1.txt', 'r')
+        get_char()
+
+        while(NextToken != EOF):
+            Lex()
+
+        #print error
+        #reset the variables
 
 # Lookup() - function to lookup operators and return the token
 def lookpu(char):
     if char == "(":
+        add_char()
         return ('(', 'Left_Paren')
     elif char == ")":
         return (')', 'Right_Paren')
@@ -83,8 +67,45 @@ def lookpu(char):
         return ('$', 'special')
     elif char == "&":
         return ('&', 'special')
-# error()
-# statement()
+
+#add next char to lexeme
+def add_char():
+    Lexeme.append(nextChar)
+
+#to get the next character of input and determine its character and class
+def get_char():
+    global nextChar, charClass
+    nextChar = File.read(1)
+    if nextChar != EOF:
+        if nextChar.isalpha():
+            charClass = LETTER
+        elif nextChar.isdigit():
+            charClass = DIGIT
+        else:
+            charClass = UNKNOWN
+    else:
+        charClass = EOF
+
+
+
+# Lex() - lexical analyzer
+#numeral, atom, variable
+def Lex():
+    NextToken = (lex, token)
+   while char.isdigit():
+       lex+=char
+       token = 'numeral'
+       NextToken = (lex, token)
+       char = next(Next)
+       break
+
+    if char.islower():
+        lex+=char
+        token = ''
+
+
+
+#---------Syntax analysis-----------
 
 # <program> -> <clause-list> <query> | <query>
 
@@ -101,12 +122,6 @@ def lookpu(char):
 # <term-list> -> <term> | <term> , <term-list>
 
 # <term> -> <atom> | <variable> | <structure> | <numeral>
-def term():
-    if NextToken[1] == 'atom' or NextToken[1] == 'variable' or NextToken[1] == 'structure' or NextToken[1] == 'Numerical':
-        return True
-    else:
-        #error handling
-        return False
 
 # <structure> -> <atom> ( <term-list> )
 
@@ -120,16 +135,10 @@ def term():
 
 # <alphanumeric> -> <lowercase-char> | <uppercase-char> | <digit>
 
-# <lowercase-char> -> a | b | c | ... | x | y | z
-
-# <uppercase-char> -> A | B | C | ... | X | Y | Z | _
-
 # <numeral> -> <digit> | <digit> <numeral>
 
-# <digit> -> 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 # <string> -> <character> | <character> <string>
 
 # <character> -> <alphanumeric> | <special>
 
-# <special> -> + | - | * | / | \ | ^ | ~ | : | . | ? | | # | $ | &
