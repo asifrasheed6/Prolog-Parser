@@ -3,10 +3,11 @@ import re
 #global
 global lex_index, token, nextChar, Lexeme, NextToken, File, error, charClass
 File = None
-number_of_lines = -1
+OFile = None
+number_of_lines = 0
 token = -1
 Lexeme = []
-error = []
+error = 0
 nextChar = ''
 
 
@@ -24,23 +25,37 @@ EOF = -1
 
 #main driver
 def main():
-    global File
+    global File, OFile, error
+    OFile = open('parser_output.txt','w')
     i = 1
-    while()
-        File = open(str(i)+'1.txt', 'r')
+    while True:
+        try:
+            File = open(str(i)+'.txt', 'r')
+        except IOError:
+            return 0
+            
+        OFile.write('Parsing: '+str(i)'.txt')
+            
         get_char()
 
-        while(NextToken != EOF):
+        while NextToken != EOF:
             Lex()
-
-        #print error
-        #reset the variables
+            
+        if error == 0:
+            OFile.write('Syntactically Correct\n')
+        else:
+            OFile.write('\n')
+            error = 0
+            
+        i+=1
 
 # Lookup() - function to lookup operators and return the token
 def lookup(char):
 
     global next_token
-    if char == "(":
+    if char == "\n":
+        number_of_lines+=1
+    elif char == "(":
         add_char()
         next_token = LEFT_PAREN
     elif char == ")":
@@ -100,11 +115,19 @@ def add_char():
 
 #to get the next character of input and determine its character and class
 def get_char():
-    global nextChar, charClass
+    global nextChar, charClass, number_of_lines
     nextChar = File.read(1)
+    
+    while re.match('\s',nextChar) and nextChar != ' ':
+        if nextChar == '\n':
+            number_of_lines+=1
+        nextChar = File.read(1)
+        
     if nextChar != EOF:
-        if re.match()
-            charClass = LETTER
+        if char.isupper():
+            charClass = UPPER_CHAR
+        elif nextChar.islower():
+            charClass = LOWER_CHAR
         elif nextChar.isdigit():
             charClass = DIGIT
         else:
@@ -117,19 +140,93 @@ def get_char():
 # Lex() - lexical analyzer
 #numeral, atom, variable
 def Lex():
-    NextToken = (lex, token)
-   while char.isdigit():
-       lex+=char
-       token = 'numeral'
-       NextToken = (lex, token)
-       char = next(Next)
-       break
+    global NextToken, Lexeme
+    if charClass in [UPPER_CHAR,LOWER_CHAR]:
+        chclass = charClass
+        add_char()
+        get_char()
+        while charClass in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
+            add_char()
+            get_char()
+        NextToken = chclass
+    elif charClass == DIGIT:
+        add_char()
+        get_char()
+        while charClass == DIGIT:
+            add_char()
+            get_char()
+        NextToken = DIGIT
+    elif charClass == UNKNOWN:
+        lookup(nextChar)
+        get_char()
+    elif charClass == EOF:
+        NextToken = EOF
+        Lexeme.append('EOF')
+    
+    OFile.write("Next token is "+str(NextToken)+", Next lexeme is "+str(Lexeme))
 
-    if char.islower():
-        lex+=char
-        token = ''
+# <special> ->+|-|*|/|\|^|~|:|.|?| |#|$|&
+def special():
+    global error
+    if NextToken in [ADD_OP,SUB_OP,MULT_OP,DIV_OP,BACK_SLASH,CIRCUMFLEX,TILDE,COLON,PERIOD,QUESTION,SPACE,HASHTAG,DOLLAR,AMPERSAND]:
+        Lex()
+        return True
+    else:
+        OFile.write("Syntax Error on Line "+str(number)+". "+str(nextChar)+" is not a special character")
+        error+=1
+        get_char()
+        Lex()
+        return False
 
+# <alphanumeric> -><lowercase-char> | <uppercase-char> | <digit>
+def alphanumeric():
+    global error
+    if NextToken in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
+        Lex()
+        return True
+    else:
+        OFile.write("Syntax Error on Line "+str(number)+". "+str(nextChar)+" is not alphanumeric")
+        error+=1
+        get_char()
+        Lex()
+        return False
+        
+# <character> -> <alphanumeric> | <special>
+def character():
+    global error
+    if NextToken in [ADD_OP,SUB_OP,MULT_OP,DIV_OP,BACK_SLASH,CIRCUMFLEX,TILDE,COLON,PERIOD,QUESTION,SPACE,HASHTAG,DOLLAR,AMPERSAND]:
+        return special()
+    elif NextToken in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
+        return alphanumeric()
+    else
+        OFile.write("Syntax Error on Line "+str(number)+"."+str(nextChar)+" is not a character")
+        error+=1
+        get_char()
+        Lex()
+        return False
 
+# <strring> -> <character> | <character> <string>
+def string():
+    global error
+    if character():
+        if NextToken in [ADD_OP,SUB_OP,MULT_OP,DIV_OP,BACK_SLASH,CIRCUMFLEX,TILDE,COLON,PERIOD,QUESTION,SPACE,HASHTAG,DOLLAR,AMPERSAND,UPPER_CHAR,LOWER_CHAR,DIGIT]:
+            string()
+            
+# <numeral> -> <digit> | <digit> <numeral>
+def numeral():
+    global error
+    if NextToken is DIGIT:
+        Lex()
+        if NextToken is DIGIT:
+            numeral()
+        return True
+    else:
+        OFile.write("Syntax Error on Line "+str(number)+"."+str(nextChar)+" is not a numeral")
+        error+=1
+        get_char()
+        Lex()
+        return False
+    
 
 #---------Syntax analysis-----------
 
