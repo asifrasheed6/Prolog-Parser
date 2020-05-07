@@ -235,8 +235,25 @@ def numeral():
 # <query> -> ?- <predicate-list> .
 
 # <predicate-list> -> <predicate> | <predicate> , <predicate-list>
-
+def PredicateList():
+    Predicate()
+    if NextToken == COMMA:
+        Lex()
+        PredicateList()
+        
 # <predicate> -> <atom> | <atom> ( <term-list> )
+
+def Predicate():
+    atom_func()
+    if NextToken == LEFT_PAREN:
+        Lex()
+        TermList()
+        if NextToken == RIGHT_PAREN:
+            Lex()
+        else:
+            print("Missing RIGHT Parenthesis")
+            get_char()
+            Lex()
 
 # <term-list> -> <term> | <term> , <term-list>
 
