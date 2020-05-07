@@ -12,10 +12,9 @@ nextChar = ''
 
 
 UPPER_CHAR, LOWER_CHAR, DIGIT, UNKNOWN= 0,1,2,99
-COMMA = 20
 ADD_OP, SUB_OP, MULT_OP, DIV_OP = 21,22,23,24
 BACK_SLASH, CIRCUMFLEX, TILDE, COLON, PERIOD =25,26,27,28,29
-QUESTION, SPACE, HASHTAG, DOLLAR, AMPERSAND = 30,31,32,33,34,35
+QUESTION, SPACE, HASHTAG, DOLLAR, AMPERSAND, COMMA = 30,31,32,33,34,35
 LEFT_PAREN, RIGHT_PAREN = 36, 37
 EOF = -1
 
@@ -197,7 +196,7 @@ def character():
         return special()
     elif NextToken in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
         return alphanumeric()
-    else
+    else:
         OFile.write("Syntax Error on Line "+str(number_of_lines)+"."+str(nextChar)+" is not a character")
         error+=1
         get_char()
@@ -231,6 +230,18 @@ def numeral():
 # <variable> -> <uppercase-char> | <uppercase-char> <character-list>
 
 # <small-atom> -> <lowercase-char> | <lowercase-char> <character-list>
+def small_atom():
+    global error
+    if NextToken is LOWER_CHAR:
+        Lex()
+        if NextToken is LOWER_CHAR:
+            character_list()
+    else:
+        OFile.write("Syntax Error on Line " + str(number_of_lines) + "." + str(nextChar) + " is not a numeral")
+        error += 1
+        get_char()
+        Lex()
+        return False
 
 # <atom> -> <small-atom> | ' <string> '
 
@@ -239,18 +250,31 @@ def numeral():
 # <term-list> -> <term> | <term> , <term-list>
 
 # <structure> -> <atom> ( <term-list> )
-        
-# <predicate> -> <atom> | <atom> ( <term-list> )
-
-def Predicate():
-    atom_func()
+def structure():
+    atom()
     if NextToken == LEFT_PAREN:
         Lex()
-        TermList()
+        term_list()
         if NextToken == RIGHT_PAREN:
             Lex()
         else:
-            print("Missing RIGHT Parenthesis")
+            OFile.write("Syntax Error on Line " + str(number_of_lines) + "." + str(nextChar) + " is missing right parenthesis")
+            error += 1
+            get_char()
+            Lex()
+
+# <predicate> -> <atom> | <atom> ( <term-list> )
+
+def Predicate():
+    atom()
+    if NextToken == LEFT_PAREN:
+        Lex()
+        term_list()
+        if NextToken == RIGHT_PAREN:
+            Lex()
+        else:
+            OFile.write("Syntax Error on Line " + str(number_of_lines) + "." + str(nextChar) + " is missing right parenthesis")
+            error += 1
             get_char()
             Lex()
 # <predicate-list> -> <predicate> | <predicate> , <predicate-list>
@@ -265,7 +289,7 @@ def Query():
     global error
     if NextToken == QUESTION:
         Lex()
-        if NextToken == DASH:
+        if NextToken == SUB_OP:
             Lex()
             Predicate_List()
             if NextToken == PERIOD:
@@ -292,7 +316,7 @@ def Clause():
         Lex()
     elif NextToken == COLON:
         Lex()
-        if NextToken == DASH:
+        if NextToken == SUB_OP:
             Lex()
             Predicate_List()
             if NextToken == PERIOD:
