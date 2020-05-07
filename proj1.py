@@ -1,18 +1,17 @@
 import re
 
 #global
-global lex_index, token, Lexeme, NextToken, File, error, charClass
+global lex_index, token, nextChar, Lexeme, NextToken, File, error, charClass
 File = None
-number_of_lines = -1
+OFile = None
+number_of_lines = 0
 token = -1
 Lexeme = []
-error = []
+error = 0
 nextChar = ''
 
-#character classes
-UPPER_CHAR, LOWER_CHAR, DIGIT, SPECIAL, UNKNOWN= 0,1,2,3,99
 
-#token codes
+UPPER_CHAR, LOWER_CHAR, DIGIT, UNKNOWN= 0,1,2,99
 ADD_OP, SUB_OP, MULT_OP, DIV_OP = 21,22,23,24
 BACK_SLASH, CIRCUMFLEX, TILDE, COLON, PERIOD =25,26,27,28,29
 QUESTION, SPACE, HASHTAG, DOLLAR, AMPERSAND = 30,31,32,33,34,35
@@ -23,27 +22,37 @@ EOF = -1
 
 #main driver
 def main():
-    global File
-    i = 0
+    global File, OFile, error
+    OFile = open('parser_output.txt','w')
+    i = 1
     while True:
-        i+=1
         try:
-            File = open(str(i)+'1.txt', 'r')
-            get_char()
+            File = open(str(i)+'.txt', 'r')
+        except IOError:
+            return 0
+            
+        OFile.write('Parsing: '+str(i)'.txt')
+            
+        get_char()
 
-            while(NextToken != EOF):
-                Lex()
-
-            #print error
-            #reset the variables
-        except FileNotFoundError:
-            print('File does not exist')
+        while NextToken != EOF:
+            Lex()
+            
+        if error == 0:
+            OFile.write('Syntactically Correct\n')
+        else:
+            OFile.write('\n')
+            error = 0
+            
+        i+=1
 
 # Lookup() - function to lookup operators and return the token
 def lookup(char):
 
-    global next_token, number_of_lines
-    if char == "(":
+    global next_token
+    if char == "\n":
+        number_of_lines+=1
+    elif char == "(":
         add_char()
         next_token = LEFT_PAREN
     elif char == ")":
@@ -91,8 +100,6 @@ def lookup(char):
     elif char == "&":
         add_char()
         next_token = AMPERSAND
-    elif char == "\n":
-        number_of_lines+=1
     else:
         add_char()
         next_token = EOF
@@ -105,8 +112,14 @@ def add_char():
 
 #to get the next character of input and determine its character and class
 def get_char():
-    global nextChar, charClass
-    nextChar = ''.join(File.read(1))
+    global nextChar, charClass, number_of_lines
+    nextChar = File.read(1)
+    
+    while re.match('\s',nextChar) and nextChar != ' ':
+        if nextChar == '\n':
+            number_of_lines+=1
+        nextChar = File.read(1)
+        
     if nextChar != EOF:
         if char.isupper():
             charClass = UPPER_CHAR
@@ -119,16 +132,19 @@ def get_char():
     else:
         charClass = EOF
 
-def getNonBlank():
-    while nextChar.isspace():
-        get_char()
-
 # Lex() - lexical analyzer
 #numeral, atom, variable
 def Lex():
-    global NextToken
-    getNonBlank()
-    if charClass == DIGIT:
+    global NextToken, Lexeme
+    if charClass in [UPPER_CHAR,LOWER_CHAR]:
+        chclass = charClass
+        add_char()
+        get_char()
+        while charClass in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
+            add_char()
+            get_char()
+        NextToken = chclass
+    elif charClass == DIGIT:
         add_char()
         get_char()
         while charClass == DIGIT:
@@ -141,92 +157,82 @@ def Lex():
     elif charClass == EOF:
         NextToken = EOF
         Lexeme.append('EOF')
+    
+    OFile.write("Next token is "+str(NextToken)+", Next lexeme is "+str(Lexeme))
 
-    print("Next token is %d, Next lexeme is %s\n", NextToken, Lexeme)
-    return NextToken
+# <special> ->+|-|*|/|\|^|~|:|.|?| |#|$|&
+def special():
+    global error
+    if NextToken in [ADD_OP,SUB_OP,MULT_OP,DIV_OP,BACK_SLASH,CIRCUMFLEX,TILDE,COLON,PERIOD,QUESTION,SPACE,HASHTAG,DOLLAR,AMPERSAND]:
+        Lex()
+        return True
+    else:
+        OFile.write("Syntax Error on Line "+str(number)+". "+str(nextChar)+" is not a special character")
+        error+=1
+        get_char()
+        Lex()
+        return False
 
+# <alphanumeric> -><lowercase-char> | <uppercase-char> | <digit>
+def alphanumeric():
+    global error
+    if NextToken in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
+        Lex()
+        return True
+    else:
+        OFile.write("Syntax Error on Line "+str(number)+". "+str(nextChar)+" is not alphanumeric")
+        error+=1
+        get_char()
+        Lex()
+        return False
+        
+# <character> -> <alphanumeric> | <special>
+def character():
+    global error
+    if NextToken in [ADD_OP,SUB_OP,MULT_OP,DIV_OP,BACK_SLASH,CIRCUMFLEX,TILDE,COLON,PERIOD,QUESTION,SPACE,HASHTAG,DOLLAR,AMPERSAND]:
+        return special()
+    elif NextToken in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
+        return alphanumeric()
+    else
+        OFile.write("Syntax Error on Line "+str(number)+"."+str(nextChar)+" is not a character")
+        error+=1
+        get_char()
+        Lex()
+        return False
 
+# <strring> -> <character> | <character> <string>
+def string():
+    global error
+    if character():
+        if NextToken in [ADD_OP,SUB_OP,MULT_OP,DIV_OP,BACK_SLASH,CIRCUMFLEX,TILDE,COLON,PERIOD,QUESTION,SPACE,HASHTAG,DOLLAR,AMPERSAND,UPPER_CHAR,LOWER_CHAR,DIGIT]:
+            string()
+            
+# <numeral> -> <digit> | <digit> <numeral>
+def numeral():
+    global error
+    if NextToken is DIGIT:
+        Lex()
+        if NextToken is DIGIT:
+            numeral()
+        return True
+    else:
+        OFile.write("Syntax Error on Line "+str(number)+"."+str(nextChar)+" is not a numeral")
+        error+=1
+        get_char()
+        Lex()
+        return False
+    
 
 #---------Syntax analysis-----------
 
 # <program> -> <clause-list> <query> | <query>
 
-def Program():
-    global error
-    if NextToken == QUESTION:
-        Query()
-    elif NextToken == LOWER_CHAR:
-        ClauseList()
-        if NextToken == QUESTION:
-            Query()
-        else:
-            print("Clause_List must come before Query", number_of_lines, token)
-            get_char()
-            Lex()
-
-
 # <clause-list> -> <clause> | <clause> <clause-list>
-
-
-def Clause_List():
-    global error
-    Clause()
-    if NextToken == QUOTATION:
-        Clause_List()
-
 
 # <clause> -> <predicate> . | <predicate> :- <predicate-list> .
 
-def Clause():
-    global error
-    Predicate()
-
-    if NextToken == PERIOD:
-        Lex()
-    elif NextToken == COLON:
-        Lex()
-        if NextToken == DASH:
-            lex()
-            Predicate_List()
-            if NextToken == PERIOD:
-                lex()
-            else:
-                print("Missing PERIOD", number_of_lines, token)
-                get_char()
-                Lex()
-        else:
-            print("Missing COLON", number_of_lines, token)
-            get_char()
-            Lex()
-    else:
-        print("Invalid Clause", number_of_lines, token)
-        get_char()
-        Lex()
-
-
 # <query> -> ?- <predicate-list> .
 
-def Query():
-    global error
-    if NextToken == QUESTION:
-        Lex()
-        if NextToken == DASH:
-            Lex()
-            Predicate_List()
-            if NextToken == PERIOD:
-                Lex()
-            else:
-                print("Missing PERIOD", number_of_lines, token)
-                get_char()
-                Lex()
-        else:
-            print("Missing DASH", number_of_lines, token)
-            get_char()
-            Lex()
-    else:
-        print("Missing QUESTION MARK", number_of_lines, token)
-        get_char()
-        lex()
 # <predicate-list> -> <predicate> | <predicate> , <predicate-list>
 
 # <predicate> -> <atom> | <atom> ( <term-list> )
@@ -245,9 +251,12 @@ def Query():
 
 # <character-list> -> <alphanumeric> | <alphanumeric> <character-list>
 
+# <alphanumeric> -> <lowercase-char> | <uppercase-char> | <digit>
+
+# <numeral> -> <digit> | <digit> <numeral>
 
 
+# <string> -> <character> | <character> <string>
 
-
-
+# <character> -> <alphanumeric> | <special>
 
