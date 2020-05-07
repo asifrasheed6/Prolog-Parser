@@ -234,7 +234,7 @@ def numeral():
 def atom():
     global error
     if NextToken == LOWER_CHAR:
-        return smallatom()
+        return small_atom()
     elif NextToken == INVCOMMA:
         Lex()
         string()
@@ -252,8 +252,23 @@ def atom():
         return False
 
 # <term> -> <atom> | <variable> | <structure> | <numeral>
+def term():
+    if NextToken == DIGIT:
+        numeral()
+    elif NextToken == UPPER_CHAR:
+        variable()
+    elif NextToken == LOWER_CHAR or quotation:
+        structure()
+    else:
+        print("Invalid Term")
+        Lex()
 
 # <term-list> -> <term> | <term> , <term-list>
+def term_list():
+    term()
+    if NextToken == COMMA:
+        Lex()
+        term_list()
 
 # <structure> -> <atom> ( <term-list> )
 def structure():
@@ -276,7 +291,7 @@ def Predicate():
     atom()
     if NextToken == LEFT_PAREN:
         Lex()
-        termlist()
+        term_list()
         if NextToken == RIGHT_PAREN:
             Lex()
         else:
@@ -286,11 +301,11 @@ def Predicate():
             Lex()
 
 # <predicate-list> -> <predicate> | <predicate> , <predicate-list>
-def PredicateList():
+def predicate_list():
     Predicate()
     if NextToken == COMMA:
         Lex()
-        PredicateList()
+        predicate_list()
 
 # <query> -> ?- <predicate-list> .
 def Query():
@@ -299,7 +314,7 @@ def Query():
         Lex()
         if NextToken == SUB_OP:
             Lex()
-            Predicate_List()
+            predicate_list()
             if NextToken == PERIOD:
                 Lex()
             else:
@@ -319,7 +334,7 @@ def Query():
         Lex()
 
 # <clause> -> <predicate> . | <predicate> :- <predicate-list> .
-def Clause():
+def clause():
     global error
     Predicate()
 
@@ -329,7 +344,7 @@ def Clause():
         Lex()
         if NextToken == SUB_OP:
             Lex()
-            Predicate_List()
+            predicate_list()
             if NextToken == PERIOD:
                 Lex()
             else:
@@ -349,19 +364,19 @@ def Clause():
         Lex()
         
 # <clause-list> -> <clause> | <clause> <clause-list>
-def Clause_List():
+def clause_list():
     global error
-    Clause()
+    clause()
     if NextToken == QUOTATION:
-        Clause_List()
+        clause_list()
 
 # <program> -> <clause-list> <query> | <query>
-def Program():
+def program():
     global error
     if NextToken == QUESTION:
         Query()
     elif NextToken == LOWER_CHAR:
-        ClauseList()
+        clause_list()
         if NextToken == QUESTION:
             Query()
         else:
