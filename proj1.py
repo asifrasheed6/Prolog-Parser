@@ -290,7 +290,7 @@ def TermList():
         TermList()
 
 # <structure> -> <atom> ( <term-list> )
-def Predicate():
+def structure():
     global error
     atom()
     if NextToken == LEFT_PAREN:
