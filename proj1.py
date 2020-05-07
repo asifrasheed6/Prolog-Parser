@@ -11,11 +11,14 @@ nextChar = ''
 
 
 #character classes
-LETTER, DIGIT, UNKNOWN = 0,1,99
+UPPER_CHAR, LOWER_CHAR, DIGIT, SPECIAL, UNKNOWN= 0,1,2,3,99
 
 #token codes
-NUMERAL
-
+ADD_OP, SUB_OP, MULT_OP, DIV_OP = 21,22,23,24
+BACK_SLASH, CIRCUMFLEX, TILDE, COLON, PERIOD =25,26,27,28,29
+QUESTION, SPACE, HASHTAG, DOLLAR, AMPERSAND = 30,31,32,33,34,35
+LEFT_PAREN, RIGHT_PAREN = 36, 37
+EOF = -1
 
 
 
@@ -33,10 +36,12 @@ def main():
         #reset the variables
 
 # Lookup() - function to lookup operators and return the token
-def lookpu(char):
+def lookup(char):
+
+    global next_token
     if char == "(":
         add_char()
-        return ('(', 'Left_Paren')
+        next_token = LEFT_PAREN
     elif char == ")":
         return (')', 'Right_Paren')
     elif char == "+":
