@@ -135,8 +135,6 @@ def get_char():
     else:
         charClass = EOF
 
-
-
 # Lex() - lexical analyzer
 #numeral, atom, variable
 def Lex():
