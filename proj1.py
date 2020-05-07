@@ -1,14 +1,13 @@
 import re
 
 #global
-global lex_index, token, nextChar, Lexeme, NextToken, File, error, charClass
+global lex_index, token, Lexeme, NextToken, File, error, charClass
 File = None
 number_of_lines = -1
 token = -1
 Lexeme = []
 error = []
 nextChar = ''
-
 
 #character classes
 UPPER_CHAR, LOWER_CHAR, DIGIT, SPECIAL, UNKNOWN= 0,1,2,3,99
@@ -25,21 +24,25 @@ EOF = -1
 #main driver
 def main():
     global File
-    i = 1
-    while()
-        File = open(str(i)+'1.txt', 'r')
-        get_char()
+    i = 0
+    while True:
+        i+=1
+        try:
+            File = open(str(i)+'1.txt', 'r')
+            get_char()
 
-        while(NextToken != EOF):
-            Lex()
+            while(NextToken != EOF):
+                Lex()
 
-        #print error
-        #reset the variables
+            #print error
+            #reset the variables
+        except FileNotFoundError:
+            print('File does not exist')
 
 # Lookup() - function to lookup operators and return the token
 def lookup(char):
 
-    global next_token
+    global next_token, number_of_lines
     if char == "(":
         add_char()
         next_token = LEFT_PAREN
@@ -88,6 +91,8 @@ def lookup(char):
     elif char == "&":
         add_char()
         next_token = AMPERSAND
+    elif char == "\n":
+        number_of_lines+=1
     else:
         add_char()
         next_token = EOF
@@ -101,10 +106,12 @@ def add_char():
 #to get the next character of input and determine its character and class
 def get_char():
     global nextChar, charClass
-    nextChar = File.read(1)
+    nextChar = ''.join(File.read(1))
     if nextChar != EOF:
-        if re.match()
-            charClass = LETTER
+        if char.isupper():
+            charClass = UPPER_CHAR
+        elif nextChar.islower():
+            charClass = LOWER_CHAR
         elif nextChar.isdigit():
             charClass = DIGIT
         else:
@@ -112,18 +119,22 @@ def get_char():
     else:
         charClass = EOF
 
-
+def getNonBlank():
+    while nextChar.isspace():
+        get_char()
 
 # Lex() - lexical analyzer
 #numeral, atom, variable
 def Lex():
-    NextToken = (lex, token)
-   while char.isdigit():
-       lex+=char
-       token = 'numeral'
-       NextToken = (lex, token)
-       char = next(Next)
-       break
+    getNonBlank()
+    if charClass == DIGIT:
+        add_char()
+        get_char()
+        while charClass == DIGIT:
+            add_char()
+            get_char()
+
+
 
     if char.islower():
         lex+=char
@@ -162,7 +173,6 @@ def Lex():
 # <alphanumeric> -> <lowercase-char> | <uppercase-char> | <digit>
 
 # <numeral> -> <digit> | <digit> <numeral>
-
 
 # <string> -> <character> | <character> <string>
 
