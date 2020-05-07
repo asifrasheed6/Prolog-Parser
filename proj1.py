@@ -12,7 +12,7 @@ nextChar = ''
 thisChar = ''
 
 # Tokens
-UPPER_CHAR, LOWER_CHAR, DIGIT, DASH, UNKNOWN= 0,1,2,3,99
+UPPER_CHAR, LOWER_CHAR, DIGIT, UNKNOWN= 0,1,2,99
 ADD_OP, SUB_OP, MULT_OP, DIV_OP = 21,22,23,24
 BACK_SLASH, CIRCUMFLEX, TILDE, COLON, PERIOD, INVCOMMA, COMMA = 25,26,27,28,29,4,20
 QUESTION, SPACE, HASHTAG, DOLLAR, AMPERSAND = 30,31,32,33,34,35
@@ -52,9 +52,6 @@ def lookup(char):
     global NextToken
     if char == "\n":
         number_of_lines+=1
-    elif char == "-":
-        add_char()
-        NextToken = DASH
     elif char == ",":
         add_char()
         NextToken = COMMA
@@ -274,7 +271,7 @@ def Query():
     global error
     if NextToken == QUESTION:
         Lex()
-        if NextToken == DASH:
+        if NextToken == SUB_OP:
             Lex()
             Predicate_List()
             if NextToken == PERIOD:
@@ -304,7 +301,7 @@ def Clause():
         Lex()
     elif NextToken == COLON:
         Lex()
-        if NextToken == DASH:
+        if NextToken == SUB_OP:
             Lex()
             Predicate_List()
             if NextToken == PERIOD:
