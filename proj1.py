@@ -15,7 +15,7 @@ thisChar = ''
 UPPER_CHAR, LOWER_CHAR, DIGIT, UNKNOWN= 0,1,2,99
 ADD_OP, SUB_OP, MULT_OP, DIV_OP = 21,22,23,24
 BACK_SLASH, CIRCUMFLEX, TILDE, COLON, PERIOD, INVCOMMA, COMMA = 25,26,27,28,29,4,20
-QUESTION, SPACE, HASHTAG, DOLLAR, AMPERSAND = 30,31,32,33,34,35
+QUESTION, SPACE, HASHTAG, DOLLAR, AMPERSAND = 30,31,32,33,34
 LEFT_PAREN, RIGHT_PAREN = 36, 37
 EOF = -1
 
@@ -23,7 +23,7 @@ EOF = -1
 
 #main driver
 def main():
-    global File, OFile, error
+    global File, OFile, error, NextToken
     OFile = open('parser_output.txt','w')
     i = 1
     while True:
@@ -35,7 +35,7 @@ def main():
         OFile.write('Parsing: '+str(i)+'.txt')
             
         get_char()
-
+        
         while NextToken != EOF:
             Lex()
             Program()
@@ -198,7 +198,7 @@ def character():
         special()
     elif NextToken in [UPPER_CHAR,LOWER_CHAR,DIGIT]:
         alphanumeric()
-    else
+    else:
         OFile.write("Syntax Error on Line "+str(number)+"."+thisChar+" is not a character")
         error+=1
         get_char()
@@ -415,7 +415,8 @@ def Program():
         if NextToken == QUESTION:
             Query()
         else:
-            print("Clause_List must come before Query", number_of_lines,token))
+            OFile.write("Syntax Error on Line "+str(number)+". Clause_List must come before Query")
+            error+=1
             get_char()
             Lex()
 
