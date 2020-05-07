@@ -147,24 +147,85 @@ def Lex():
 
 
 
-
-
-    if char.islower():
-        lex+=char
-        token = ''
-
-
-
 #---------Syntax analysis-----------
 
 # <program> -> <clause-list> <query> | <query>
 
-# <clause-list> -> <clause> | <clause> <clause-list>
+def Program():
+    global error
+    if NextToken == QUESTION:
+        Query()
+    elif NextToken == LOWER_CHAR:
+        ClauseList()
+        if NextToken == QUESTION:
+            Query()
+        else:
+            print("Clause_List must come before Query", number_of_lines, token))
+            get_char()
+            Lex()
+
+            # <clause-list> -> <clause> | <clause> <clause-list>
+
+
+def Clause_List():
+    global error
+    Clause()
+    if NextToken == QUOTATION:
+        Clause_List()
+
 
 # <clause> -> <predicate> . | <predicate> :- <predicate-list> .
 
+def Clause():
+    global error
+    Predicate()
+
+    if NextToken == PERIOD:
+        Lex()
+    elif NextToken == COLON:
+        Lex()
+        if NextToken == DASH:
+            lex()
+            Predicate_List()
+            if NextToken == PERIOD:
+                lex()
+            else:
+                print("Missing PERIOD", number_of_lines, token)
+                get_char()
+                Lex()
+        else:
+            print("Missing COLON", number_of_lines, token)
+            get_char()
+            Lex()
+    else:
+        print("Invalid Clause", number_of_lines, token)
+        get_char()
+        Lex()
+
+
 # <query> -> ?- <predicate-list> .
 
+def Query():
+    global error
+    if NextToken == QUESTION:
+        Lex()
+        if NextToken == DASH:
+            Lex()
+            Predicate_List()
+            if NextToken == PERIOD:
+                Lex()
+            else:
+                print("Missing PERIOD", number_of_lines, token)
+                get_char()
+                Lex()
+        else:
+            print("Missing DASH", number_of_lines, token)
+            get_char()
+            Lex()
+    else:
+        print("Missing QUESTION MARK", number_of_lines, token)
+        get_char()
+        lex()
 # <predicate-list> -> <predicate> | <predicate> , <predicate-list>
 
 # <predicate> -> <atom> | <atom> ( <term-list> )
