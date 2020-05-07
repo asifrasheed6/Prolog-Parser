@@ -1,9 +1,9 @@
 import re
 
-
+#global
 global lex_index, token, nextChar, Lexeme, NextToken, File, error, charClass
 File = None
-lex_index = -1
+number_of_lines = -1
 token = -1
 Lexeme = []
 error = []
@@ -25,7 +25,8 @@ EOF = -1
 #main driver
 def main():
     global File
-    for i in range(1, 25):
+    i = 1
+    while()
         File = open(str(i)+'1.txt', 'r')
         get_char()
 
@@ -43,35 +44,55 @@ def lookup(char):
         add_char()
         next_token = LEFT_PAREN
     elif char == ")":
-        return (')', 'Right_Paren')
+        add_char()
+        next_token = RIGHT_PAREN
     elif char == "+":
-        return ('+', 'special')
+        add_char()
+        next_token = ADD_OP
     elif char == "-":
-        return ('-', 'special')
+        add_char()
+        next_token = SUB_OP
     elif char == "*":
-        return ('*', 'special')
+        add_char()
+        next_token = MULT_OP
     elif char == "/":
-        return ('/', 'special')
+        add_char()
+        next_token = DIV_OP
     elif char == "\\":
-        return ('\\', 'special')
+        add_char()
+        next_token = BACK_SLASH
     elif char == "^":
-        return ('^', 'special')
+        add_char()
+        next_token = CIRCUMFLEX
     elif char == "~":
-        return ('~', 'special')
+        add_char()
+        next_token = TILDE
     elif char == ":":
-        return (':', 'special')
+        add_char()
+        next_token = COLON
     elif char == ".":
-        return ('.', 'special')
+        add_char()
+        next_token = PERIOD
     elif char == "?":
-        return ('?', 'special')
+        add_char()
+        next_token = QUESTION
     elif char == " ":
-        return (' ', 'special')
+        add_char()
+        next_token = SPACE
     elif char == "#":
-        return ('#', 'special')
+        add_char()
+        next_token = HASHTAG
     elif char == "$":
-        return ('$', 'special')
+        add_char()
+        next_token = DOLLAR
     elif char == "&":
-        return ('&', 'special')
+        add_char()
+        next_token = AMPERSAND
+    else:
+        add_char()
+        next_token = EOF
+
+    return next_token
 
 #add next char to lexeme
 def add_char():
@@ -82,7 +103,7 @@ def get_char():
     global nextChar, charClass
     nextChar = File.read(1)
     if nextChar != EOF:
-        if nextChar.isalpha():
+        if re.match()
             charClass = LETTER
         elif nextChar.isdigit():
             charClass = DIGIT
