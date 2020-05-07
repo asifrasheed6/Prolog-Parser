@@ -126,6 +126,7 @@ def getNonBlank():
 # Lex() - lexical analyzer
 #numeral, atom, variable
 def Lex():
+    global NextToken
     getNonBlank()
     if charClass == DIGIT:
         add_char()
@@ -133,6 +134,18 @@ def Lex():
         while charClass == DIGIT:
             add_char()
             get_char()
+        NextToken = DIGIT
+    elif charClass == UNKNOWN:
+        lookup(nextChar)
+        get_char()
+    elif charClass == EOF:
+        NextToken = EOF
+        Lexeme.append('EOF')
+
+    print("Next token is %d, Next lexeme is %s\n", NextToken, Lexeme)
+    return NextToken
+
+
 
 
 
