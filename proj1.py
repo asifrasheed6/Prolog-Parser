@@ -160,7 +160,7 @@ def Program():
         if NextToken == QUESTION:
             Query()
         else:
-            print("Clause_List must come before Query", number_of_lines, token))
+            print("Clause_List must come before Query", number_of_lines, token)
             get_char()
             Lex()
 
