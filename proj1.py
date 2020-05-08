@@ -47,6 +47,7 @@ def main():
         else:
             OFile.write('\n')
             error = 0
+        number_of_lines = 0
             
         i+=1
 
@@ -423,10 +424,5 @@ def Program():
         Clause_List()
         if NextToken == QUESTION:
             Query()
-    else:
-        OFile.write("Syntax Error on Line "+str(number_of_lines)+". Clause_List must come before Query\n")
-        error+=1
-        get_char()
-        Lex()
 
 main()
